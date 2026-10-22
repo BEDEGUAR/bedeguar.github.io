@@ -9,12 +9,14 @@
   :root{--bg:#0e0f0c;--fg:#e9e4d6;--dim:#8d8a7e;--accent:#b8b08a}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:17px/1.45 -apple-system,system-ui,"Helvetica Neue",sans-serif;-webkit-text-size-adjust:100%}
   a{color:inherit;text-decoration:none}
-  .tap{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:18px}
-  .tap img{width:min(62vw,300px);height:auto;display:block;opacity:.95}
+  /* The AR link may contain ONE element only, the image (Safari rule). The image fills the screen and is the tap target;
+     the words sit on top and let taps through. */
+  .tap{position:fixed;inset:0;display:block;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  .tap img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 36%;padding:18vh 14vw 32vh;box-sizing:border-box;opacity:.95;pointer-events:auto}
+  .words{position:fixed;left:0;right:0;bottom:16vh;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;pointer-events:none;-webkit-user-select:none;user-select:none}
   h1{font-weight:400;letter-spacing:.42em;text-transform:uppercase;font-size:15px;margin:0;color:var(--dim)}
-  .cta{font-size:21px;margin:0}
-  .sub{font-size:13px;color:var(--dim);margin:0;max-width:30ch}
-  .ring{width:72px;height:72px;border:1px solid var(--accent);border-radius:50%;display:grid;place-items:center;margin-top:8px}
+  .cta{font-size:22px;margin:0}
+  .ring{width:72px;height:72px;border:1px solid var(--accent);border-radius:50%;display:grid;place-items:center;margin-top:6px}
   .ring span{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:pulse 2.4s ease-in-out infinite}
   @keyframes pulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.9);opacity:1}}
   .desk{display:none}
@@ -25,22 +27,16 @@
 <body>
 
 <!-- iPhone / iPad: Safari opens a rel="ar" link straight into AR Quick Look. Only the USDZ is downloaded. -->
-<a id="ios" class="tap" rel="ar" href="gall_v0_8_mobile.usdz" hidden>
-  <img src="bud.png" alt="">
-  <h1>Bedeguar</h1>
-  <p class="cta">Tap to grow the gall in this room</p>
-  <p class="sub">Point your phone at the floor and let it find the ground. It takes a minute to grow.</p>
-  <div class="ring"><span></span></div>
-</a>
+<a id="ios" class="tap" rel="ar" href="gall_v0_8_mobile.usdz" hidden><img src="bud.png" alt="Bedeguar"></a>
 
 <!-- Android: Scene Viewer intent. Chrome hands the GLB to Google's AR viewer; nothing is rendered in the page. -->
-<a id="android" class="tap" hidden>
-  <img src="bud.png" alt="">
+<a id="android" class="tap" hidden><img src="bud.png" alt="Bedeguar"></a>
+
+<div id="words" class="words" hidden>
   <h1>Bedeguar</h1>
-  <p class="cta">Tap to grow the gall in this room</p>
-  <p class="sub">Point your phone at the floor and let it find the ground. It takes a minute to grow.</p>
+  <p class="cta">Tap to grow the gall</p>
   <div class="ring"><span></span></div>
-</a>
+</div>
 
 <!-- Anything else (a laptop): a plain 3D preview. -->
 <div id="desk" class="desk">
@@ -56,14 +52,14 @@
   var ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
   var android=/Android/.test(ua);
   if(ios){
-    document.getElementById("ios").hidden=false;
+    document.getElementById("ios").hidden=false; document.getElementById("words").hidden=false;
   }else if(android){
     var a=document.getElementById("android");
     var glb=location.origin+location.pathname.replace(/[^\/]*$/,"")+"gall_v0_8_mobile.glb";
     a.href="intent://arvr.google.com/scene-viewer/1.0?file="+encodeURIComponent(glb)+"&mode=ar_preferred&title=Bedeguar"
           +"#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;"
           +"S.browser_fallback_url="+encodeURIComponent(location.href)+";end;";
-    a.hidden=false;
+    a.hidden=false; document.getElementById("words").hidden=false;
   }else{
     var d=document.getElementById("desk"); d.style.display="block";
     var s=document.createElement("script"); s.type="module";
