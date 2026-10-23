@@ -11,14 +11,16 @@
   a{color:inherit;text-decoration:none}
   /* The AR link may contain ONE element only, the image (Safari rule). The image fills the screen and is the tap target;
      the words sit on top and let taps through. */
-  .tap{position:fixed;inset:0;display:block;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-  .tap img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 36%;padding:18vh 14vw 32vh;box-sizing:border-box;opacity:.95;pointer-events:auto}
-  .words{position:fixed;left:0;right:0;bottom:16vh;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;pointer-events:none;-webkit-user-select:none;user-select:none}
+  /* The AR link may contain ONE element only, the image (Safari rule). */
+  .tap{position:fixed;left:0;right:0;top:0;height:62%;display:block;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  .tap img{width:100%;height:100%;object-fit:contain;object-position:50% 60%;padding:10vh 10vw 0;box-sizing:border-box;opacity:.95;display:block}
+  .words{position:fixed;left:0;right:0;top:64%;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   h1{font-weight:400;letter-spacing:.42em;text-transform:uppercase;font-size:15px;margin:0;color:var(--dim)}
   .cta{font-size:22px;margin:0}
-  .ring{width:72px;height:72px;border:1px solid var(--accent);border-radius:50%;display:grid;place-items:center;margin-top:6px}
+  .ring{width:72px;height:72px;border:1px solid var(--accent);border-radius:50%;display:grid;place-items:center;margin-top:6px;cursor:pointer}
   .ring span{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:pulse 2.4s ease-in-out infinite}
   @keyframes pulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.9);opacity:1}}
+  .status{font-size:13px;color:var(--dim);margin:0;min-height:1.4em}
   .desk{display:none}
   model-viewer{width:100%;height:100%;--poster-color:var(--bg)}
   .note{position:fixed;left:16px;right:16px;bottom:16px;font-size:13px;color:var(--dim);text-align:center}
@@ -35,7 +37,8 @@
 <div id="words" class="words" hidden>
   <h1>Bedeguar</h1>
   <p class="cta">Tap to grow the gall</p>
-  <div class="ring"><span></span></div>
+  <div class="ring" id="ring"><span></span></div>
+  <p class="status" id="status"></p>
 </div>
 
 <!-- Anything else (a laptop): a plain 3D preview. -->
@@ -51,15 +54,23 @@
   var ua=navigator.userAgent||"";
   var ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
   var android=/Android/.test(ua);
+  var words=document.getElementById("words"), status=document.getElementById("status"), ring=document.getElementById("ring");
+  var usdz="gall_v0_8_mobile.usdz";
+  function loading(){ status.textContent="Loading the gall\u2026 a few seconds"; }
   if(ios){
-    document.getElementById("ios").hidden=false; document.getElementById("words").hidden=false;
+    var a=document.getElementById("ios"); a.hidden=false; words.hidden=false;
+    a.addEventListener("click",loading);
+    // second route: the ring opens the same file directly (Safari sends a .usdz straight to Quick Look)
+    ring.addEventListener("click",function(){ loading(); window.location.href=usdz; });
   }else if(android){
-    var a=document.getElementById("android");
+    var b=document.getElementById("android");
     var glb=location.origin+location.pathname.replace(/[^\/]*$/,"")+"gall_v0_8_mobile.glb";
-    a.href="intent://arvr.google.com/scene-viewer/1.0?file="+encodeURIComponent(glb)+"&mode=ar_preferred&title=Bedeguar"
+    b.href="intent://arvr.google.com/scene-viewer/1.0?file="+encodeURIComponent(glb)+"&mode=ar_preferred&title=Bedeguar"
           +"#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;"
           +"S.browser_fallback_url="+encodeURIComponent(location.href)+";end;";
-    a.hidden=false; document.getElementById("words").hidden=false;
+    b.hidden=false; words.hidden=false;
+    b.addEventListener("click",loading);
+    ring.addEventListener("click",function(){ loading(); window.location.href=b.href; });
   }else{
     var d=document.getElementById("desk"); d.style.display="block";
     var s=document.createElement("script"); s.type="module";
